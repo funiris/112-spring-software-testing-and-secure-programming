@@ -1,47 +1,65 @@
 const test = require('node:test');
 const assert = require('assert');
+const fs = require('fs');
+
+// Mock the file containing names
+test.mock.method(fs, 'readFile', (file, options, callback) => {
+    callback(null, 'Aqur\nBobi\ncat');
+});
+
 const { Application, MailSystem } = require('./main');
 
-test("Test Application's selectNextPerson", () => {
-    const app = new Application();
-    const initialSelectedLength = app.selected.length;
-    const selectedPerson = app.selectNextPerson();
-    assert.strictEqual(app.selected.length, initialSelectedLength + 1, "One person should be selected");
-});
-
-test("Test Application's notifySelected", () => {
-    const app = new Application();
-    const consoleSpy = jest.spyOn(console, 'log');
-    app.notifySelected();
-    expect(consoleSpy).toHaveBeenCalled();
-});
-
-test("Test MailSystem's write method", () => {
+test('MailSystem_write()', () => {
     const mailSystem = new MailSystem();
-    const name = "John";
-    const context = mailSystem.write(name);
-    assert.strictEqual(context, `Congrats, ${name}!`, "Context should match expected");
+    assert.strictEqual(mailSystem.write('Aqur'), 'Congrats, Aqur!');
+    assert.strictEqual(mailSystem.write(202), 'Congrats, 202!');
+    assert.strictEqual(mailSystem.write(null), 'Congrats, null!');
 });
 
-test("Test MailSystem's send method", () => {
+test('MailSystem_send()', () => {
     const mailSystem = new MailSystem();
-    const name = "John";
-    const context = "Test context";
-    const result = mailSystem.send(name, context);
-    assert(result === true || result === false, "send method should return a boolean");
+    const name = 'Aqur';
+    test.mock.method(Math, 'random', () => 0.9);
+    assert.strictEqual(mailSystem.send(name, 'success'), true);
+    test.mock.method(Math, 'random', () => 0.2);
+    assert.strictEqual(mailSystem.send(name, 'fail'), false);
 });
 
-test("Test Application's getRandomPerson", () => {
+test('Application_getNames()', async () => {
     const app = new Application();
-    const getRandomPersonSpy = jest.spyOn(app, 'getRandomPerson');
-    app.getRandomPerson();
-    expect(getRandomPersonSpy).toHaveBeenCalled();
+    const nameList = ['Aqur', 'Bobi', 'cat'];
+    const [names, selected] = await app.getNames();
+    assert.deepStrictEqual(names, nameList);
+    assert.deepStrictEqual(selected, []);
 });
 
-test("Test Application's getRandomPerson with stubbed getNames method", () => {
+test('Application_getRandomPerson()', async () => {
     const app = new Application();
-    const stubbedNames = ['John', 'Jane', 'Doe'];
-    app.getNames = jest.fn().mockResolvedValue([stubbedNames, []]);
+    const [names] = await app.getNames();                          
     const randomPerson = app.getRandomPerson();
-    expect(stubbedNames).toContain(randomPerson);
+});
+
+test('Application_selectNextPerson()', async () => {
+    const app = new Application();
+    const [names] = await app.getNames();
+    app.selected = ['Aqur'];
+    let count = 0;
+    test.mock.method(app, 'getRandomPerson', () => names[count++]);
+    assert.strictEqual(app.selectNextPerson(), 'Bobi');
+    assert.deepStrictEqual(app.selected, ['Aqur', 'Bobi']);
+    assert.strictEqual(app.selectNextPerson(), 'cat');
+    assert.deepStrictEqual(app.selected, ['Aqur', 'Bobi', 'cat']);
+    assert.strictEqual(app.selectNextPerson(), null);
+});
+
+
+test('Application_notifySelected()', async () => {
+    const app = new Application();
+    const [names] = await app.getNames();
+    app.selected = names.slice(); // Select all names initially
+    app.mailSystem.send = test.mock.fn(app.mailSystem.send);
+    app.mailSystem.write = test.mock.fn(app.mailSystem.write);
+    app.notifySelected();
+    assert.strictEqual(app.mailSystem.send.mock.calls.length, names.length);
+    assert.strictEqual(app.mailSystem.write.mock.calls.length, names.length);
 });
