@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
-const assert = require('assert');
 const { Calculator } = require('./main');
+const assert = require('assert');
 
 // TODO: write your tests here
 // 定義測試參數
