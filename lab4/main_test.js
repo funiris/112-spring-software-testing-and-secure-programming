@@ -1,5 +1,3 @@
-//把待格式化代碼粘貼到這裡 
-
 const puppeteer = require('puppeteer');
 
 (async () => {
