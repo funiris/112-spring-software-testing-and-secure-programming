@@ -1,48 +1,46 @@
 const puppeteer = require('puppeteer');
 
 (async () => {
-  // Launch Chrome
-  const browser = await puppeteer.launch();
-  /*
-  const browser = await puppeteer.launch({ 
-    headless: false // Set the browser to be visible
-  });
-  */
-  // Open a new page
-  const page = await browser.newPage(); 
-  // Navigate to the target URL
-  await page.goto('https://pptr.dev/'); 
+    // Launch the browser and open a new blank page
+    const browser = await puppeteer.launch(); 
+    const page = await browser.newPage(); // 打開一個分頁
+    /Navigate the page to a URL
+    await page.goto('https://pptr.dev/');
 
-  // Wait for the search bar container element to appear
-  await page.waitForSelector('.navbarSearchContainer_Bca1');
+    // 等待搜索框父元素出现
+    await page.waitForSelector('.navbarSearchContainer_Bca1');
 
-  // Click on the search button
-  await page.click('button.DocSearch.DocSearch-Button');
+    await page.click('button.DocSearch.DocSearch-Button');
+    // 等待搜索框内部的元素出现
+    await page.waitForSelector('.DocSearch-Input');
 
-  // Wait for the search bar input element to appear
-  await page.waitForSelector('.DocSearch-Input');
+    // 在搜索框内部查找输入框
+    const input = await page.$('.DocSearch-Input');
 
-  // Find the input box inside the search bar
-  const input = await page.$('.DocSearch-Input');
 
-  // Enter the search term into the search bar
-  await input.type('chipi chipi chapa chapa'); 
+    // 在搜索框内部输入关键词
+    await input.type('chipi chipi chapa chapa');
+    //await input.type('chipi chipi chapa chapa',{ delay: 500 });
+    //await page.waitForNavigation();
 
-  // Wait for the search results to appear
-  await page.waitForSelector('.DocSearch-Hit');
 
-  // Click on the first result in the "Docs" section
-  //await page.waitForSelector('li[id="docsearch-item-5"] a');
-  await page.click("#docsearch-item-5");
+    // Get the `Docs` result section
+    await page.waitForSelector('.DocSearch-Hit');
+    //await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Click on first result in `Docs` section
+    await page.waitForSelector('li[id="docsearch-item-5"] a');
+    await page.click("#docsearch-item-5");
 
-  // Wait for the h1 element to appear and assign it to a variable
-  const h1Element = await page.waitForSelector('h1');
+  
+    // 等待唯一 h1 元素出現並將其分配給變量
+    const h1Element = await page.waitForSelector('h1');
 
-  // Use evaluate to extract the title text
+    // 使用 evaluate 提取文字內容
+    const fullTitle = await h1Element?.evaluate(el => el.textContent);
 
-  const fullTitle = await h1Element?.evaluate(el => el.textContent); 
-  // Print the title
-  console.log(fullTitle); 
+    // Print the full title
+    console.log(fullTitle);  
 
-  await browser.close();
+    await browser.close();
 })();
