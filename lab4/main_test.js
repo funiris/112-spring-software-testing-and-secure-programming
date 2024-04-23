@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer');
     // Launch the browser and open a new blank page
     const browser = await puppeteer.launch(); 
     const page = await browser.newPage(); // 打開一個分頁
-    /Navigate the page to a URL
+    //Navigate the page to a URL
     await page.goto('https://pptr.dev/');
 
     // 等待搜索框父元素出现
