@@ -1,8 +1,7 @@
 import angr, sys
 proj = angr.Project('./login')
-init_stat = proj.factory.entry_state()
-simulation = proj.factory.simgr(init_stat)
-
+init_state = proj.factory.entry_state()
+simulation = proj.factory.simgr(init_state)
 def success_condition(state):
     return b"Login successful" in state.posix.dumps(sys.stdout.fileno())
 def fail_condition(state):
